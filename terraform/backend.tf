@@ -1,4 +1,3 @@
-# Terraform configuration
 terraform {
   required_version = ">= 1.0"
   
@@ -8,7 +7,12 @@ terraform {
       version = "~> 5.0"
     }
   }
+  
+  backend "s3" {
+    bucket         = "clo835fp-bg-images"
+    key            = "terraform-state/clo835fp/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "IDlock"
+    encrypt        = true
+  }
 }
-
-# Note: Using local state for simplicity
-# In production, you would configure S3 backend after creating the bucket
