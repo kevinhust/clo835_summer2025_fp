@@ -1,9 +1,14 @@
+# Terraform configuration
 terraform {
-  backend "s3" {
-    bucket         = "clo835fp-terraform-state"
-    key            = "terraform_state/prod/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "clo835fp-terraform-lock"
-    encrypt        = true
+  required_version = ">= 1.0"
+  
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
   }
 }
+
+# Note: Using local state for simplicity
+# In production, you would configure S3 backend after creating the bucket
