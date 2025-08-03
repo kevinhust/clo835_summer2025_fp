@@ -9,11 +9,11 @@ metadata:
     project: clo835-final-project
 data:
   # S3 background image URL - replace with your actual S3 URL
-  BACKGROUND_IMAGE_URL: "s3://your-bucket-name/background-image.jpg"
+  BACKGROUND_IMAGE_URL: "s3://clo835fp-bg-images/background-images/default-bg.jpg"
   
   # Group information - replace with your actual group details
-  GROUP_NAME: "CLO835 Group"
-  GROUP_SLOGAN: "Excellence in Cloud Computing"
+  GROUP_NAME: "CLO835 Final Project Team"
+  GROUP_SLOGAN: "Innovation in Cloud Native Architecture"
   
   # Database configuration
   DATABASE: "employees"
