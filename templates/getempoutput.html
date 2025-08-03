@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Employee Information - {{ group_name }}</title>
+	<style>
+		body {
+			{% if background_image %}
+			background-image: url('{{ background_image }}');
+			background-size: cover;
+			background-position: center;
+			background-repeat: no-repeat;
+			{% else %}
+			background: {{ color }};
+			{% endif %}
+		}
+		.header-section {
+			background-color: rgba(255, 255, 255, 0.9);
+			padding: 10px;
+			border-radius: 10px;
+			margin-bottom: 20px;
+		}
+		.content-section {
+			background-color: rgba(255, 255, 255, 0.9);
+			padding: 30px;
+			border-radius: 15px;
+			margin: 50px auto;
+			max-width: 600px;
+			text-align: center;
+			font-family: avenir;
+		}
+	</style>
+</head>
+<center>
+	<font color="black" size="5" style="font-family: avenir">
+		<div class="header-section">
+			<h1 style="color: DodgerBlue">Employee Information</h1>
+			<h2 style="color: #2c3e50">{{ group_name }}</h2>
+			<p style="color: #34495e; font-style: italic">{{ group_slogan }}</p>
+		</div>
+
+		<body>
+			<div class="content-section">
+				<form>
+
+					<div>
+
+				  		<strong>Employee ID:</strong><br> {{ id }} <br><br>
+
+				  		<strong>First Name:</strong><br> {{ fname }} <br><br>
+
+				  		<strong>Last Name:</strong><br> {{ lname }} <br><br>
+
+				  		<strong>Primary Interest:</strong><br> {{ interest }} <br><br>
+
+				  		<strong>Location:</strong><br> {{ location }} <br><br>
+				  		
+				  	</div>
+
+				</form>
+				<br>
+				<a href="{{ url_for('home') }}" style="text-decoration: none; background: #3498db; color: white; padding: 10px 20px; border-radius: 5px;">Back to Home</a>
+			</div>
+		</body>
+
+	</font>
+</center>
+</html>

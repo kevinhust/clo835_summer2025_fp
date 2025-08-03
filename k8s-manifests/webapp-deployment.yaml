@@ -1,0 +1,113 @@
+# Flask WebApp Deployment for CLO835 Final Project
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+  namespace: clo835
+  labels:
+    app: webapp
+    project: clo835-final-project
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      serviceAccountName: clo835-sa
+      containers:
+      - name: webapp
+        # Replace with your actual ECR image URI
+        image: YOUR_ECR_URI/clo835-webapp:latest
+        ports:
+        - containerPort: 81
+          name: http
+        env:
+        # Configuration from ConfigMap
+        - name: BACKGROUND_IMAGE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: BACKGROUND_IMAGE_URL
+        - name: GROUP_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: GROUP_NAME
+        - name: GROUP_SLOGAN
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: GROUP_SLOGAN
+        - name: DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: DATABASE
+        - name: DBPORT
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: DBPORT
+        - name: DBHOST
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: DBHOST
+        - name: AWS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: AWS_REGION
+        - name: APP_COLOR
+          valueFrom:
+            configMapKeyRef:
+              name: webapp-config
+              key: APP_COLOR
+        # Secrets for sensitive data
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-secret
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-secret
+              key: AWS_SECRET_ACCESS_KEY
+        - name: DBUSER
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: DBUSER
+        - name: DBPWD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: DBPWD
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 81
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 81
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+      imagePullSecrets:
+      - name: ecr-secret

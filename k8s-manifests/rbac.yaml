@@ -1,0 +1,42 @@
+# ServiceAccount for CLO835 Final Project
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: clo835-sa
+  namespace: clo835
+  labels:
+    app: webapp
+    project: clo835-final-project
+
+---
+# ClusterRole with permissions to create and read namespaces
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: CLO835
+  labels:
+    project: clo835-final-project
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list", "create", "watch"]
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+
+---
+# ClusterRoleBinding to bind the role to the service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: clo835-binding
+  labels:
+    project: clo835-final-project
+subjects:
+- kind: ServiceAccount
+  name: clo835-sa
+  namespace: clo835
+roleRef:
+  kind: ClusterRole
+  name: CLO835
+  apiGroup: rbac.authorization.k8s.io

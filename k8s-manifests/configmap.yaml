@@ -1,0 +1,27 @@
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config
+  namespace: clo835
+  labels:
+    app: webapp
+    project: clo835-final-project
+data:
+  # S3 background image URL - replace with your actual S3 URL
+  BACKGROUND_IMAGE_URL: "s3://your-bucket-name/background-image.jpg"
+  
+  # Group information - replace with your actual group details
+  GROUP_NAME: "CLO835 Group"
+  GROUP_SLOGAN: "Excellence in Cloud Computing"
+  
+  # Database configuration
+  DATABASE: "employees"
+  DBPORT: "3306"
+  DBHOST: "mysql-service.fp.svc.cluster.local"
+  
+  # AWS region
+  AWS_REGION: "us-east-1"
+  
+  # Application color
+  APP_COLOR: "lime"

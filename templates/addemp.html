@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Add Employee Information</title>
+	<style>
+		body {
+			{% if background_image %}
+			background-image: url('{{ background_image }}');
+			background-size: cover;
+			background-position: center;
+			background-repeat: no-repeat;
+			{% else %}
+			background: {{ color }};
+			{% endif %}
+		}
+		.header-section {
+			background-color: rgba(255, 255, 255, 0.9);
+			padding: 10px;
+			border-radius: 10px;
+			margin-bottom: 20px;
+		}
+		.form-section {
+			background-color: rgba(255, 255, 255, 0.8);
+			padding: 20px;
+			border-radius: 10px;
+		}
+	</style>
+</head>
+<center>
+	<font color="black" size="4" style="font-family: avenir">
+		<div class="header-section">
+			<h1 style="color: DodgerBlue">Employee Database</h1>
+			<h2 style="color: #2c3e50">{{ group_name }}</h2>
+			<p style="color: #34495e; font-style: italic">{{ group_slogan }}</p>
+		</div>
+		<body>
+
+			<div class="form-section">
+				<form action="/addemp" autocomplete="on" method = "POST" enctype="multipart/form-data">
+
+			
+
+		  		Employee ID:<br> <input style="height:25px;font-size:14pt; color:grey;" type="number" name="emp_id" autofocus size="40"><br><br>
+
+		  		First Name:<br> <input style="height:25px;font-size:14pt;color:grey;" type="text" name="first_name" ><br><br>
+
+		  		Last Name:<br> <input style="height:25px;font-size:14pt;color:grey;" type="text" name="last_name"><br><br>
+
+		  		Primary Skills:<br> <input style="height:25px;font-size:14pt;color:grey;" type="text" name="primary_skill"><br><br>
+
+		  		Location:<br> <input style="height:25px;font-size:14pt;color:grey;" type="text" name="location"><br><br>
+
+		  		<button type="submit" style="background: grey; height: 45px; width: 200px; color: white; size: 5; font:oblique;">UPDATE DATABASE</button><br><br>
+		  		<button type="submit" formaction="/getemp" style="background: grey; height: 45px; width: 200px; color:white; font:oblique;">GET EMPLOYEE INFORMATION</button><br><br>
+
+				</form>
+			</div>
+			<br><br><br><br><br><br><br><br>
+            <a href="/about">About Us</a>
+		</body>
+
+	</font>
+</center>
+</html>
