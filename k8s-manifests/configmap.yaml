@@ -8,8 +8,13 @@ metadata:
     app: webapp
     project: clo835-final-project
 data:
-  # S3 background image URL - replace with your actual S3 URL
+  # S3 background image URL - current default image
   BACKGROUND_IMAGE_URL: "s3://clo835fp-bg-images/background-images/default-bg.jpg"
+  
+  # Alternative images for demo (change BACKGROUND_IMAGE_URL to these during demo):
+  # s3://clo835fp-bg-images/background-images/blue-theme.jpg
+  # s3://clo835fp-bg-images/background-images/green-theme.jpg  
+  # s3://clo835fp-bg-images/background-images/professional-bg.jpg
   
   # Group information - replace with your actual group details
   GROUP_NAME: "CLO835 Final Project Team"
