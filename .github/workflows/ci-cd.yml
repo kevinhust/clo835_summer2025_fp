@@ -106,7 +106,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}
+        images: ${{ secrets.TF_VAR_ECR_REPOSITORY_NAME }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -128,7 +128,7 @@ jobs:
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}:${{ github.sha }}
+        image-ref: ${{ secrets.TF_VAR_ECR_REPOSITORY_NAME }}:${{ github.sha }}
         format: 'sarif'
         output: 'trivy-results.sarif'
         
@@ -199,21 +199,21 @@ jobs:
         
     - name: Update deployment image
       run: |
-        kubectl set image deployment/webapp webapp=${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}:${{ github.sha }} -n clo835
-        kubectl rollout status deployment/webapp -n clo835 --timeout=300s
+        kubectl set image deployment/webapp webapp=${{ secrets.TF_VAR_ECR_REPOSITORY_NAME }}:${{ github.sha }} -n fp
+        kubectl rollout status deployment/webapp -n fp --timeout=300s
         
     - name: Get application URL
       id: get-url
       run: |
-        URL=$(kubectl get svc webapp-service -n clo835 -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+        URL=$(kubectl get svc webapp-service -n fp -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
         echo "url=http://$URL" >> $GITHUB_OUTPUT
         echo "Application deployed at: http://$URL"
         
     - name: Run deployment verification
       run: |
         echo "Verifying deployment..."
-        kubectl get pods -n clo835
-        kubectl get services -n clo835
+        kubectl get pods -n fp
+        kubectl get services -n fp
         echo "Deployment verification completed"
 
   # Job 4: Notification

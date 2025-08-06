@@ -198,6 +198,7 @@ terraform.tfvars
 
 # Secrets and sensitive data
 secrets.yaml
+k8s-manifests/secrets.yaml
 *.key
 *.crt
 *.csr

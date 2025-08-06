@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: webapp
-  namespace: clo835
+  namespace: fp
   labels:
     app: webapp
     project: clo835-final-project

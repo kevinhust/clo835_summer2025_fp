@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: webapp-config
-  namespace: clo835
+  namespace: fp
   labels:
     app: webapp
     project: clo835-final-project
@@ -23,7 +23,7 @@ data:
   # Database configuration
   DATABASE: "employees"
   DBPORT: "3306"
-  DBHOST: "mysql-service.fp.svc.cluster.local"
+  DBHOST: "mysql-service.clo835.svc.cluster.local"
   
   # AWS region
   AWS_REGION: "us-east-1"

@@ -13,7 +13,7 @@ app = Flask(__name__)
 # Database configuration
 DBHOST = os.environ.get("DBHOST") or "localhost"
 DBUSER = os.environ.get("DBUSER") or "root"
-DBPWD = os.environ.get("DBPWD") or "passwors"
+DBPWD = os.environ.get("DBPWD") or "password"
 DATABASE = os.environ.get("DATABASE") or "employees"
 DBPORT = int(os.environ.get("DBPORT"))
 
@@ -192,18 +192,31 @@ def FetchData():
     cursor = db_conn.cursor()
 
     try:
-        cursor.execute(select_sql,(emp_id))
+        cursor.execute(select_sql,(emp_id,))
         result = cursor.fetchone()
         
-        # Add No Employee found form
-        output["emp_id"] = result[0]
-        output["first_name"] = result[1]
-        output["last_name"] = result[2]
-        output["primary_skills"] = result[3]
-        output["location"] = result[4]
+        if result:
+            output["emp_id"] = result[0]
+            output["first_name"] = result[1]
+            output["last_name"] = result[2]
+            output["primary_skills"] = result[3]
+            output["location"] = result[4]
+        else:
+            # Handle employee not found
+            output["emp_id"] = emp_id
+            output["first_name"] = "Employee Not Found"
+            output["last_name"] = ""
+            output["primary_skills"] = ""
+            output["location"] = ""
         
     except Exception as e:
-        print(e)
+        print(f"Error fetching data for emp_id {emp_id}: {str(e)}")
+        # Return error state
+        output["emp_id"] = emp_id
+        output["first_name"] = "Error"
+        output["last_name"] = "Database Error"
+        output["primary_skills"] = ""
+        output["location"] = ""
 
     finally:
         cursor.close()

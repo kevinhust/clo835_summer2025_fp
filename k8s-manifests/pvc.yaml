@@ -3,7 +3,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mysql-pvc
-  namespace: clo835
+  namespace: fp
   labels:
     app: mysql
     project: clo835-final-project

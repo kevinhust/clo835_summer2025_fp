@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: clo835
+  name: fp
   labels:
-    name: clo835
+    name: fp
     project: clo835-final-project

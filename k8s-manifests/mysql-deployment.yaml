@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql-deployment
-  namespace: clo835
+  namespace: fp
   labels:
     app: mysql
     project: clo835-final-project

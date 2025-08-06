@@ -28,8 +28,8 @@ kubectl apply -f namespace.yaml
 echo "📦 Deploying ConfigMap..."
 kubectl apply -f configmap.yaml
 
-echo "📦 Deploying Secrets..."
-kubectl apply -f secrets.yaml
+echo "📦 Secrets should be created manually via GitHub Actions or kubectl commands..."
+echo "Skipping hardcoded secrets.yaml (use GitHub repository secrets instead)"
 
 echo "📦 Deploying RBAC resources..."
 kubectl apply -f rbac.yaml
