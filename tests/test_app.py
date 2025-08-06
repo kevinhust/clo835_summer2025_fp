@@ -121,10 +121,13 @@ class TestS3Integration:
         
         # Mock successful download
         with patch.dict(os.environ, {'BACKGROUND_IMAGE_URL': 's3://test-bucket/background.jpg'}):
-            with patch('app.s3_client') as mock_s3:
-                with patch('os.makedirs'):
-                    result = app.download_background_image()
-                    assert result == '/static/background.jpg'
+            with patch('os.makedirs'):
+                with patch.object(app, 's3_client') as mock_s3:
+                    with patch.object(app, 'BACKGROUND_IMAGE_URL', 's3://test-bucket/background.jpg'):
+                        # Ensure s3_client is truthy for the test
+                        mock_s3.__bool__ = lambda self: True
+                        result = app.download_background_image()
+                        assert result == '/static/background.jpg'
     
     def test_download_background_image_no_client(self):
         """Test download when S3 client is not available"""
