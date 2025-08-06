@@ -15,7 +15,7 @@ DBHOST = os.environ.get("DBHOST") or "localhost"
 DBUSER = os.environ.get("DBUSER") or "root"
 DBPWD = os.environ.get("DBPWD") or "password"
 DATABASE = os.environ.get("DATABASE") or "employees"
-DBPORT = int(os.environ.get("DBPORT"))
+DBPORT = int(os.environ.get("DBPORT") or "3306")
 
 # Application configuration
 COLOR_FROM_ENV = os.environ.get('APP_COLOR') or "lime"
