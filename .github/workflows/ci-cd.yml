@@ -56,7 +56,7 @@ jobs:
     name: Test Application and Build Docker Image
     runs-on: ubuntu-latest
     needs: [get-terraform-outputs]
-    if: always() && (needs.get-terraform-outputs.result == 'success' || needs.get-terraform-outputs.result == 'skipped')
+    if: always()
     
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
@@ -114,7 +114,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}
+        images: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url || '039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp' }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -135,7 +135,7 @@ jobs:
       uses: aquasecurity/trivy-action@master
       continue-on-error: true
       with:
-        image-ref: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}:${{ github.sha }}
+        image-ref: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url || '039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp' }}:${{ github.sha }}
         format: 'table'
         exit-code: '0'
         
@@ -143,7 +143,7 @@ jobs:
       uses: aquasecurity/trivy-action@master
       continue-on-error: true
       with:
-        image-ref: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}:${{ github.sha }}
+        image-ref: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url || '039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp' }}:${{ github.sha }}
         format: 'sarif'
         output: 'trivy-results.sarif'
         exit-code: '0'
@@ -216,7 +216,7 @@ jobs:
         
     - name: Update deployment image
       run: |
-        kubectl set image deployment/webapp webapp=${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}:${{ github.sha }} -n fp
+        kubectl set image deployment/webapp webapp=${{ needs.get-terraform-outputs.outputs.ecr_repository_url || '039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp' }}:${{ github.sha }} -n fp
         kubectl rollout status deployment/webapp -n fp --timeout=300s
         
     - name: Get application URL
