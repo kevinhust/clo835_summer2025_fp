@@ -112,7 +112,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ secrets.TF_VAR_ECR_REPOSITORY_NAME }}
+        images: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
@@ -133,7 +133,7 @@ jobs:
       uses: aquasecurity/trivy-action@master
       continue-on-error: true
       with:
-        image-ref: ${{ secrets.TF_VAR_ECR_REPOSITORY_NAME }}:${{ github.sha }}
+        image-ref: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}:${{ github.sha }}
         format: 'table'
         exit-code: '0'
         
@@ -141,7 +141,7 @@ jobs:
       uses: aquasecurity/trivy-action@master
       continue-on-error: true
       with:
-        image-ref: ${{ secrets.TF_VAR_ECR_REPOSITORY_NAME }}:${{ github.sha }}
+        image-ref: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}:${{ github.sha }}
         format: 'sarif'
         output: 'trivy-results.sarif'
         exit-code: '0'
@@ -214,7 +214,7 @@ jobs:
         
     - name: Update deployment image
       run: |
-        kubectl set image deployment/webapp webapp=${{ secrets.TF_VAR_ECR_REPOSITORY_NAME }}:${{ github.sha }} -n fp
+        kubectl set image deployment/webapp webapp=${{ needs.get-terraform-outputs.outputs.ecr_repository_url }}:${{ github.sha }} -n fp
         kubectl rollout status deployment/webapp -n fp --timeout=300s
         
     - name: Get application URL
