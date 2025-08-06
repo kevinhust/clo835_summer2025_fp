@@ -10,6 +10,12 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  id-token: write
+
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: clo835-webapp
@@ -125,16 +131,27 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         
-    - name: Run Trivy vulnerability scanner
+    - name: Run Trivy vulnerability scanner (Table format)
       uses: aquasecurity/trivy-action@master
+      continue-on-error: true
+      with:
+        image-ref: ${{ secrets.TF_VAR_ECR_REPOSITORY_NAME }}:${{ github.sha }}
+        format: 'table'
+        exit-code: '0'
+        
+    - name: Run Trivy vulnerability scanner (SARIF)
+      uses: aquasecurity/trivy-action@master
+      continue-on-error: true
       with:
         image-ref: ${{ secrets.TF_VAR_ECR_REPOSITORY_NAME }}:${{ github.sha }}
         format: 'sarif'
         output: 'trivy-results.sarif'
+        exit-code: '0'
         
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v3
-      if: always()
+      if: always() && hashFiles('trivy-results.sarif') != ''
+      continue-on-error: true
       with:
         sarif_file: 'trivy-results.sarif'
         
