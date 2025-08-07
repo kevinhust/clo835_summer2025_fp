@@ -25,6 +25,11 @@ output "eks_cluster_name" {
   value       = aws_eks_cluster.clo835_eks.name
 }
 
+output "cluster_name" {
+  description = "The name of the EKS cluster (alias for compatibility)"
+  value       = aws_eks_cluster.clo835_eks.name
+}
+
 output "eks_cluster_endpoint" {
   description = "The endpoint for the EKS cluster API server"
   value       = aws_eks_cluster.clo835_eks.endpoint

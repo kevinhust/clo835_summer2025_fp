@@ -5,19 +5,19 @@
 region = "us-east-1"
 
 # VPC Configuration
-vpc_cidr = "10.0.0.0/16"
-public_subnet_1_cidr = "10.0.1.0/24"
-public_subnet_2_cidr = "10.0.2.0/24"
+vpc_cidr              = "10.0.0.0/16"
+public_subnet_1_cidr  = "10.0.1.0/24"
+public_subnet_2_cidr  = "10.0.2.0/24"
 private_subnet_1_cidr = "10.0.3.0/24"
 private_subnet_2_cidr = "10.0.4.0/24"
 
 # EKS Configuration
-cluster_name = "clo835-eks-cluster"
-node_group_name = "clo835-eks-nodes"
-node_instance_type = "t3.small"
+cluster_name          = "clo835-eks-cluster"
+node_group_name       = "clo835-eks-nodes"
+node_instance_type    = "t3.small"
 node_desired_capacity = 2
-node_max_capacity = 3
-node_min_capacity = 1
+node_max_capacity     = 3
+node_min_capacity     = 1
 
 # S3 Configuration
 s3_bucket_name = "clo835fp-bg-images"
@@ -27,7 +27,7 @@ ecr_repository_name = "webapp"
 
 # Tags
 environment = "production"
-project = "CLO835-FinalProject"
+project     = "CLO835-FinalProject"
 
 # Security Configuration 
 # enable_logging = true        # 启用EKS控制平面日志

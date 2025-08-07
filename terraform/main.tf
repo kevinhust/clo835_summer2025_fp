@@ -15,11 +15,11 @@ resource "aws_vpc" "clo835_vpc" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
-  
+
   tags = {
-    Name        = "CLO835-FP-VPC"
-    Environment = var.environment
-    Project     = var.project
+    Name                                        = "CLO835-FP-VPC"
+    Environment                                 = var.environment
+    Project                                     = var.project
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
 }
@@ -30,13 +30,13 @@ resource "aws_subnet" "clo835_public_subnet_1" {
   cidr_block              = var.public_subnet_1_cidr
   availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = true
-  
+
   tags = {
-    Name        = "CLO835-FP-public-subnet-1"
-    Environment = var.environment
-    Project     = var.project
+    Name                                        = "CLO835-FP-public-subnet-1"
+    Environment                                 = var.environment
+    Project                                     = var.project
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/role/elb"                    = "1"
   }
 }
 
@@ -46,13 +46,13 @@ resource "aws_subnet" "clo835_public_subnet_2" {
   cidr_block              = var.public_subnet_2_cidr
   availability_zone       = data.aws_availability_zones.available.names[1]
   map_public_ip_on_launch = true
-  
+
   tags = {
-    Name        = "CLO835-FP-public-subnet-2"
-    Environment = var.environment
-    Project     = var.project
+    Name                                        = "CLO835-FP-public-subnet-2"
+    Environment                                 = var.environment
+    Project                                     = var.project
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/role/elb"                    = "1"
   }
 }
 
@@ -61,13 +61,13 @@ resource "aws_subnet" "clo835_private_subnet_1" {
   vpc_id            = aws_vpc.clo835_vpc.id
   cidr_block        = var.private_subnet_1_cidr
   availability_zone = data.aws_availability_zones.available.names[0]
-  
+
   tags = {
-    Name        = "CLO835-FP-private-subnet-1"
-    Environment = var.environment
-    Project     = var.project
+    Name                                        = "CLO835-FP-private-subnet-1"
+    Environment                                 = var.environment
+    Project                                     = var.project
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
-    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/role/internal-elb"           = "1"
   }
 }
 
@@ -76,20 +76,20 @@ resource "aws_subnet" "clo835_private_subnet_2" {
   vpc_id            = aws_vpc.clo835_vpc.id
   cidr_block        = var.private_subnet_2_cidr
   availability_zone = data.aws_availability_zones.available.names[1]
-  
+
   tags = {
-    Name        = "CLO835-FP-private-subnet-2"
-    Environment = var.environment
-    Project     = var.project
+    Name                                        = "CLO835-FP-private-subnet-2"
+    Environment                                 = var.environment
+    Project                                     = var.project
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
-    "kubernetes.io/role/internal-elb" = "1"
+    "kubernetes.io/role/internal-elb"           = "1"
   }
 }
 
 # Internet Gateway
 resource "aws_internet_gateway" "clo835_igw" {
   vpc_id = aws_vpc.clo835_vpc.id
-  
+
   tags = {
     Name        = "CLO835-FP-igw"
     Environment = var.environment
@@ -99,9 +99,9 @@ resource "aws_internet_gateway" "clo835_igw" {
 
 # Elastic IPs for NAT Gateways
 resource "aws_eip" "clo835_nat_eip_1" {
-  domain = "vpc"
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.clo835_igw]
-  
+
   tags = {
     Name        = "CLO835-FP-nat-eip-1"
     Environment = var.environment
@@ -110,9 +110,9 @@ resource "aws_eip" "clo835_nat_eip_1" {
 }
 
 resource "aws_eip" "clo835_nat_eip_2" {
-  domain = "vpc"
+  domain     = "vpc"
   depends_on = [aws_internet_gateway.clo835_igw]
-  
+
   tags = {
     Name        = "CLO835-FP-nat-eip-2"
     Environment = var.environment
@@ -125,7 +125,7 @@ resource "aws_nat_gateway" "clo835_nat_1" {
   allocation_id = aws_eip.clo835_nat_eip_1.id
   subnet_id     = aws_subnet.clo835_public_subnet_1.id
   depends_on    = [aws_internet_gateway.clo835_igw]
-  
+
   tags = {
     Name        = "CLO835-FP-nat-gateway-1"
     Environment = var.environment
@@ -138,7 +138,7 @@ resource "aws_nat_gateway" "clo835_nat_2" {
   allocation_id = aws_eip.clo835_nat_eip_2.id
   subnet_id     = aws_subnet.clo835_public_subnet_2.id
   depends_on    = [aws_internet_gateway.clo835_igw]
-  
+
   tags = {
     Name        = "CLO835-FP-nat-gateway-2"
     Environment = var.environment
@@ -149,12 +149,12 @@ resource "aws_nat_gateway" "clo835_nat_2" {
 # Public Route Table
 resource "aws_route_table" "clo835_public_rt" {
   vpc_id = aws_vpc.clo835_vpc.id
-  
+
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.clo835_igw.id
   }
-  
+
   tags = {
     Name        = "CLO835-FP-public-rt"
     Environment = var.environment
@@ -165,12 +165,12 @@ resource "aws_route_table" "clo835_public_rt" {
 # Private Route Table 1
 resource "aws_route_table" "clo835_private_rt_1" {
   vpc_id = aws_vpc.clo835_vpc.id
-  
+
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.clo835_nat_1.id
   }
-  
+
   tags = {
     Name        = "CLO835-FP-private-rt-1"
     Environment = var.environment
@@ -181,12 +181,12 @@ resource "aws_route_table" "clo835_private_rt_1" {
 # Private Route Table 2
 resource "aws_route_table" "clo835_private_rt_2" {
   vpc_id = aws_vpc.clo835_vpc.id
-  
+
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.clo835_nat_2.id
   }
-  
+
   tags = {
     Name        = "CLO835-FP-private-rt-2"
     Environment = var.environment
@@ -220,7 +220,7 @@ resource "aws_security_group" "clo835_eks_cluster_sg" {
   name        = "CLO835-FP-eks-cluster-sg"
   description = "Security group for EKS cluster"
   vpc_id      = aws_vpc.clo835_vpc.id
-  
+
   ingress {
     description = "HTTPS"
     from_port   = 443
@@ -228,14 +228,14 @@ resource "aws_security_group" "clo835_eks_cluster_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = {
     Name        = "CLO835-FP-eks-cluster-sg"
     Environment = var.environment
@@ -248,7 +248,7 @@ resource "aws_security_group" "clo835_eks_node_sg" {
   name        = "CLO835-FP-eks-node-sg"
   description = "Security group for EKS nodes"
   vpc_id      = aws_vpc.clo835_vpc.id
-  
+
   ingress {
     description = "Node to node communication"
     from_port   = 0
@@ -256,7 +256,7 @@ resource "aws_security_group" "clo835_eks_node_sg" {
     protocol    = "tcp"
     self        = true
   }
-  
+
   ingress {
     description     = "Cluster to node communication"
     from_port       = 1025
@@ -264,7 +264,7 @@ resource "aws_security_group" "clo835_eks_node_sg" {
     protocol        = "tcp"
     security_groups = [aws_security_group.clo835_eks_cluster_sg.id]
   }
-  
+
   ingress {
     description     = "Cluster API to node kubelets"
     from_port       = 443
@@ -272,14 +272,14 @@ resource "aws_security_group" "clo835_eks_node_sg" {
     protocol        = "tcp"
     security_groups = [aws_security_group.clo835_eks_cluster_sg.id]
   }
-  
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  
+
   tags = {
     Name        = "CLO835-FP-eks-node-sg"
     Environment = var.environment
@@ -290,7 +290,7 @@ resource "aws_security_group" "clo835_eks_node_sg" {
 # IAM Role for EKS Cluster
 resource "aws_iam_role" "clo835_eks_cluster_role" {
   name = "CLO835-FP-eks-cluster-role"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -303,7 +303,7 @@ resource "aws_iam_role" "clo835_eks_cluster_role" {
       }
     ]
   })
-  
+
   tags = {
     Name        = "CLO835-FP-eks-cluster-role"
     Environment = var.environment
@@ -320,7 +320,7 @@ resource "aws_iam_role_policy_attachment" "clo835_eks_cluster_policy" {
 # IAM Role for EKS Node Group
 resource "aws_iam_role" "clo835_eks_node_role" {
   name = "CLO835-FP-eks-node-role"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -333,7 +333,7 @@ resource "aws_iam_role" "clo835_eks_node_role" {
       }
     ]
   })
-  
+
   tags = {
     Name        = "CLO835-FP-eks-node-role"
     Environment = var.environment
@@ -362,10 +362,10 @@ resource "aws_eks_cluster" "clo835_eks" {
   name     = var.cluster_name
   role_arn = aws_iam_role.clo835_eks_cluster_role.arn
   version  = "1.30"
-  
+
   vpc_config {
-    security_group_ids      = [aws_security_group.clo835_eks_cluster_sg.id]
-    subnet_ids              = [
+    security_group_ids = [aws_security_group.clo835_eks_cluster_sg.id]
+    subnet_ids = [
       aws_subnet.clo835_private_subnet_1.id,
       aws_subnet.clo835_private_subnet_2.id,
       aws_subnet.clo835_public_subnet_1.id,
@@ -374,11 +374,11 @@ resource "aws_eks_cluster" "clo835_eks" {
     endpoint_private_access = true
     endpoint_public_access  = true
   }
-  
+
   depends_on = [
     aws_iam_role_policy_attachment.clo835_eks_cluster_policy,
   ]
-  
+
   tags = {
     Name        = var.cluster_name
     Environment = var.environment
@@ -391,30 +391,30 @@ resource "aws_eks_node_group" "clo835_nodes" {
   cluster_name    = aws_eks_cluster.clo835_eks.name
   node_group_name = var.node_group_name
   node_role_arn   = aws_iam_role.clo835_eks_node_role.arn
-  subnet_ids      = [
+  subnet_ids = [
     aws_subnet.clo835_private_subnet_1.id,
     aws_subnet.clo835_private_subnet_2.id
   ]
-  
+
   capacity_type  = "ON_DEMAND"
   instance_types = [var.node_instance_type]
-  
+
   scaling_config {
     desired_size = var.node_desired_capacity
     max_size     = var.node_max_capacity
     min_size     = var.node_min_capacity
   }
-  
+
   update_config {
     max_unavailable = 1
   }
-  
+
   depends_on = [
     aws_iam_role_policy_attachment.clo835_eks_worker_node_policy,
     aws_iam_role_policy_attachment.clo835_eks_cni_policy,
     aws_iam_role_policy_attachment.clo835_eks_container_registry_policy,
   ]
-  
+
   tags = {
     Name        = var.node_group_name
     Environment = var.environment
@@ -425,7 +425,7 @@ resource "aws_eks_node_group" "clo835_nodes" {
 # S3 Bucket for Background Images
 resource "aws_s3_bucket" "clo835_background_images" {
   bucket = var.s3_bucket_name
-  
+
   tags = {
     Name        = var.s3_bucket_name
     Environment = var.environment
@@ -444,7 +444,7 @@ resource "aws_s3_bucket_versioning" "clo835_background_images_versioning" {
 # S3 Bucket Server Side Encryption
 resource "aws_s3_bucket_server_side_encryption_configuration" "clo835_background_images_encryption" {
   bucket = aws_s3_bucket.clo835_background_images.id
-  
+
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
@@ -455,7 +455,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "clo835_background
 # S3 Bucket Public Access Block
 resource "aws_s3_bucket_public_access_block" "clo835_background_images_pab" {
   bucket = aws_s3_bucket.clo835_background_images.id
-  
+
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
@@ -466,11 +466,11 @@ resource "aws_s3_bucket_public_access_block" "clo835_background_images_pab" {
 resource "aws_ecr_repository" "clo835_webapp" {
   name                 = "clo835fp-${var.ecr_repository_name}"
   image_tag_mutability = "MUTABLE"
-  
+
   image_scanning_configuration {
     scan_on_push = true
   }
-  
+
   tags = {
     Name        = "clo835fp-${var.ecr_repository_name}"
     Environment = var.environment
@@ -481,7 +481,7 @@ resource "aws_ecr_repository" "clo835_webapp" {
 # ECR Repository Lifecycle Policy
 resource "aws_ecr_lifecycle_policy" "clo835_webapp_lifecycle" {
   repository = aws_ecr_repository.clo835_webapp.name
-  
+
   policy = jsonencode({
     rules = [
       {
