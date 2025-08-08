@@ -112,7 +112,8 @@ jobs:
       run: exit 1
 
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      # Allow apply when triggered by push to main OR manual dispatch
+      if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
       run: terraform apply -auto-approve tfplan
 
     - name: Export Terraform Outputs

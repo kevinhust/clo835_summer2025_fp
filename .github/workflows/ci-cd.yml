@@ -7,8 +7,7 @@ on:
     branches: [ main ]
   workflow_run:
     workflows: ["Terraform Infrastructure"]
-    types:
-      - completed
+    types: [completed]
 
 permissions:
   contents: read
@@ -27,29 +26,19 @@ jobs:
     name: Get Infrastructure Information
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
-    
     outputs:
       eks_cluster_name: ${{ steps.tf_outputs.outputs.eks_cluster_name }}
-      ecr_repository_url: ${{ steps.tf_outputs.outputs.ecr_repository_url }}
-      s3_bucket_name: ${{ steps.tf_outputs.outputs.s3_bucket_name }}
-      
     steps:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-
+        aws-region: ${{ env.AWS_REGION }}
     - name: Get Terraform Outputs
       id: tf_outputs
       run: |
-        # Use AWS CLI to get outputs from terraform state
         echo "eks_cluster_name=clo835-eks-cluster" >> $GITHUB_OUTPUT
-        # Get AWS account ID and construct ECR URI
-        AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-        echo "ecr_repository_url=${AWS_ACCOUNT_ID}.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp" >> $GITHUB_OUTPUT
-        echo "s3_bucket_name=clo835fp-background-images" >> $GITHUB_OUTPUT
 
   # Job 1: Test and Build
   test-and-build:
