@@ -34,19 +34,26 @@ logger = logging.getLogger(__name__)
 
 # Initialize S3 client
 s3_client = None
-if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
-    try:
-        s3_client = boto3.client(
-            's3',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            region_name=AWS_REGION
-        )
-        logger.info("S3 client initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize S3 client: {e}")
-else:
-    logger.warning("AWS credentials not provided, S3 functionality will be disabled")
+try:
+    # Try to use IAM role first (recommended for EKS)
+    s3_client = boto3.client('s3', region_name=AWS_REGION)
+    logger.info("S3 client initialized successfully with IAM role")
+except Exception as e:
+    logger.warning(f"Failed to initialize S3 client with IAM role: {e}")
+    # Fallback to access keys if provided
+    if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+        try:
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                region_name=AWS_REGION
+            )
+            logger.info("S3 client initialized successfully with access keys")
+        except Exception as e:
+            logger.error(f"Failed to initialize S3 client: {e}")
+    else:
+        logger.warning("AWS credentials not provided, S3 functionality will be disabled")
 
 # Log the background image URL
 if BACKGROUND_IMAGE_URL:
