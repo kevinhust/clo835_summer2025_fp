@@ -44,16 +44,22 @@ jobs:
       id: get-tag
       run: |
         LATEST_TAG=$(aws ecr describe-images \
-          --repository-name clo835-webapp \
+          --repository-name clo835fp-webapp \
           --query 'sort_by(imageDetails,& imageDigest)[*].imageTags[0]' \
           --output text | tail -1)
         echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
         echo "Latest tag: $LATEST_TAG"
         
+    - name: Compute ECR repository URL
+      id: ecr
+      run: |
+        AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        echo "url=${AWS_ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/clo835fp-webapp" >> $GITHUB_OUTPUT
+
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: ${{ secrets.ECR_REPOSITORY_URI }}:${{ steps.get-tag.outputs.tag }}
+        image-ref: ${{ steps.ecr.outputs.url }}:${{ steps.get-tag.outputs.tag }}
         format: 'sarif'
         output: 'trivy-results.sarif'
         
@@ -65,7 +71,7 @@ jobs:
     - name: Run Trivy vulnerability scanner (JSON output)
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: ${{ secrets.ECR_REPOSITORY_URI }}:${{ steps.get-tag.outputs.tag }}
+        image-ref: ${{ steps.ecr.outputs.url }}:${{ steps.get-tag.outputs.tag }}
         format: 'json'
         output: 'trivy-results.json'
         

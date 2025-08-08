@@ -90,7 +90,7 @@ spec:
         image: YOUR_ACCOUNT.dkr.ecr.us-east-1.amazonaws.com/clo835-webapp:latest
 ```
 
-### Step 2: Deploy to EKS
+### Step 2: Deploy to EKS（含 HPA 与动态镜像注入）
 ```bash
 # Apply all manifests in order
 kubectl apply -f namespace.yaml
@@ -102,9 +102,18 @@ kubectl apply -f mysql-deployment.yaml
 kubectl apply -f mysql-service.yaml
 kubectl apply -f webapp-deployment.yaml
 kubectl apply -f webapp-service.yaml
+kubectl apply -f webapp-hpa.yaml
 
 # Or apply all at once
 kubectl apply -f .
+```
+
+#### 使用动态 ECR URL 的一键部署脚本
+```bash
+cd k8s-manifests
+chmod +x deploy.sh
+# 可选：export AWS_REGION=us-east-1
+./deploy.sh
 ```
 
 ### Step 3: Verify Deployment
@@ -123,6 +132,39 @@ kubectl get service webapp-service -n fp
 ```
 
 ### Step 4: Initialize Database
+
+## 创建 Secrets 的推荐 CLI（避免提交敏感信息）
+
+```bash
+# MySQL 凭据（应用与 root 均使用 DBPWD，按需调整）
+kubectl create secret generic mysql-secret \
+  --from-literal=DBUSER=<db_user> \
+  --from-literal=DBPWD=<db_password> \
+  -n fp
+
+# AWS 凭据（供应用访问私有 S3）
+kubectl create secret generic aws-secret \
+  --from-literal=AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+  --from-literal=AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+  -n fp
+
+# ECR 拉取密钥（强烈推荐用 CLI 动态创建）
+AWS_REGION=${AWS_REGION:-us-east-1}
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+kubectl create secret docker-registry ecr-secret \
+  --docker-server=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com \
+  --docker-username=AWS \
+  --docker-password=$(aws ecr get-login-password --region ${AWS_REGION}) \
+  -n fp
+```
+
+## 自动扩缩容（HPA）
+- 已提供 `webapp-hpa.yaml`：CPU 和内存各 50% 目标，`minReplicas=1`，`maxReplicas=5`
+- 可通过如下命令查看 HPA：
+```bash
+kubectl get hpa -n fp
+kubectl describe hpa webapp-hpa -n fp
+```
 ```bash
 # Copy SQL file to MySQL pod
 kubectl cp ../mysql.sql mysql-deployment-<pod-id>:/tmp/ -n fp

@@ -18,7 +18,7 @@ permissions:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: clo835-webapp
+  ECR_REPOSITORY: clo835fp-webapp
   PYTHON_VERSION: '3.9'
 
 jobs:
@@ -110,15 +110,36 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
       
+    - name: Ensure ECR repository exists
+      run: |
+        set -e
+        REPO_NAME=${{ env.ECR_REPOSITORY }}
+        if ! aws ecr describe-repositories --repository-names "$REPO_NAME" >/dev/null 2>&1; then
+          echo "ECR repository $REPO_NAME not found. Creating..."
+          aws ecr create-repository --repository-name "$REPO_NAME" >/dev/null
+          echo "ECR repository $REPO_NAME created."
+        else
+          echo "ECR repository $REPO_NAME exists."
+        fi
+      env:
+        AWS_REGION: ${{ env.AWS_REGION }}
+
+    - name: Compute ECR repository URL
+      id: ecr
+      run: |
+        AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        echo "url=${AWS_ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}" >> $GITHUB_OUTPUT
+
     - name: Extract metadata for Docker
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url || '039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp' }}
+        images: ${{ steps.ecr.outputs.url }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=sha,prefix={{branch}}-
+          # Avoid empty branch name in PR which produced invalid tag like ":-<sha>"
+          type=sha,prefix=sha-
           type=raw,value=latest,enable={{is_default_branch}}
           
     - name: Build and push Docker image
@@ -135,7 +156,7 @@ jobs:
       uses: aquasecurity/trivy-action@master
       continue-on-error: true
       with:
-        image-ref: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url || '039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp' }}:${{ github.sha }}
+        image-ref: ${{ steps.ecr.outputs.url }}:${{ github.sha }}
         format: 'table'
         exit-code: '0'
         
@@ -143,7 +164,7 @@ jobs:
       uses: aquasecurity/trivy-action@master
       continue-on-error: true
       with:
-        image-ref: ${{ needs.get-terraform-outputs.outputs.ecr_repository_url || '039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp' }}:${{ github.sha }}
+        image-ref: ${{ steps.ecr.outputs.url }}:${{ github.sha }}
         format: 'sarif'
         output: 'trivy-results.sarif'
         exit-code: '0'
@@ -190,10 +211,6 @@ jobs:
     needs: [get-terraform-outputs, test-and-build, validate-k8s]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
-    environment:
-      name: production
-      url: ${{ steps.get-url.outputs.url }}
-      
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -216,7 +233,9 @@ jobs:
         
     - name: Update deployment image
       run: |
-        kubectl set image deployment/webapp webapp=${{ needs.get-terraform-outputs.outputs.ecr_repository_url || '039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp' }}:${{ github.sha }} -n fp
+        AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        ECR_URL=${AWS_ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}
+        kubectl set image deployment/webapp webapp=${ECR_URL}:${{ github.sha }} -n fp
         kubectl rollout status deployment/webapp -n fp --timeout=300s
         
     - name: Get application URL
