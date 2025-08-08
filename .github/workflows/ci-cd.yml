@@ -235,11 +235,23 @@ jobs:
       run: |
         aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name clo835-eks-cluster
         
-    - name: Update deployment image
+    - name: Update deployment manifests and deploy
       run: |
         AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
         ECR_URL=${AWS_ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}
-        kubectl set image deployment/webapp webapp=${ECR_URL}:${{ github.sha }} -n fp
+        IAM_ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/LabRole"
+        
+        # Update webapp deployment with correct image URI
+        sed -i "s|\${ECR_REPOSITORY_URI}|${ECR_URL}|g" k8s-manifests/webapp-deployment.yaml
+        
+        # Update service account with IAM role ARN
+        sed -i "s|\${IAM_ROLE_ARN}|${IAM_ROLE_ARN}|g" k8s-manifests/rbac.yaml
+        
+        # Apply manifests
+        kubectl apply -f k8s-manifests/
+        
+        # Update webapp deployment to use current image tag
+        kubectl set image deployment/webapp webapp=${ECR_URL}:sha-${{ github.sha }} -n fp
         kubectl rollout status deployment/webapp -n fp --timeout=300s
         
     - name: Get application URL

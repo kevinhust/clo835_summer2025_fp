@@ -386,6 +386,79 @@ resource "aws_eks_cluster" "clo835_eks" {
   }
 }
 
+# OIDC Identity Provider for EKS
+data "tls_certificate" "cluster" {
+  url = aws_eks_cluster.clo835_eks.identity[0].oidc[0].issuer
+}
+
+resource "aws_iam_openid_connect_provider" "cluster" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.cluster.certificates[0].sha1_fingerprint]
+  url             = aws_eks_cluster.clo835_eks.identity[0].oidc[0].issuer
+
+  tags = {
+    Name        = "${var.cluster_name}-oidc"
+    Environment = var.environment
+    Project     = var.project
+  }
+}
+
+# EBS CSI Driver IAM Role
+resource "aws_iam_role" "ebs_csi_role" {
+  name = "AmazonEKS_EBS_CSI_DriverRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.cluster.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.cluster.url, "https://", "")}:sub" = "system:serviceaccount:kube-system:ebs-csi-controller-sa"
+            "${replace(aws_iam_openid_connect_provider.cluster.url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "AmazonEKS_EBS_CSI_DriverRole"
+    Environment = var.environment
+    Project     = var.project
+  }
+}
+
+# Attach EBS CSI policy
+resource "aws_iam_role_policy_attachment" "ebs_csi_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+  role       = aws_iam_role.ebs_csi_role.name
+}
+
+# EBS CSI Driver Addon
+resource "aws_eks_addon" "ebs_csi" {
+  cluster_name             = aws_eks_cluster.clo835_eks.name
+  addon_name               = "aws-ebs-csi-driver"
+  addon_version            = "v1.46.0-eksbuild.1"
+  service_account_role_arn = aws_iam_role.ebs_csi_role.arn
+  resolve_conflicts        = "OVERWRITE"
+
+  depends_on = [
+    aws_eks_node_group.clo835_nodes,
+    aws_iam_role_policy_attachment.ebs_csi_policy
+  ]
+
+  tags = {
+    Name        = "${var.cluster_name}-ebs-csi"
+    Environment = var.environment
+    Project     = var.project
+  }
+}
+
 # EKS Node Group
 resource "aws_eks_node_group" "clo835_nodes" {
   cluster_name    = aws_eks_cluster.clo835_eks.name
@@ -499,4 +572,75 @@ resource "aws_ecr_lifecycle_policy" "clo835_webapp_lifecycle" {
       }
     ]
   })
+}
+
+# Application S3 Access IAM Role
+resource "aws_iam_role" "app_s3_role" {
+  name = "LabRole"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.cluster.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${replace(aws_iam_openid_connect_provider.cluster.url, "https://", "")}:sub" = "system:serviceaccount:fp:clo835-sa"
+            "${replace(aws_iam_openid_connect_provider.cluster.url, "https://", "")}:aud" = "sts.amazonaws.com"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "LabRole"
+    Environment = var.environment
+    Project     = var.project
+  }
+}
+
+# S3 Access Policy for Application
+resource "aws_iam_policy" "s3_background_images_access" {
+  name        = "S3BackgroundImagesAccess"
+  description = "IAM policy for S3 background images access"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          aws_s3_bucket.clo835_background_images.arn,
+          "${aws_s3_bucket.clo835_background_images.arn}/*"
+        ]
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "S3BackgroundImagesAccess"
+    Environment = var.environment
+    Project     = var.project
+  }
+}
+
+# Attach S3 policy to application role
+resource "aws_iam_role_policy_attachment" "app_s3_policy" {
+  policy_arn = aws_iam_policy.s3_background_images_access.arn
+  role       = aws_iam_role.app_s3_role.name
+}
+
+# Attach ECR read-only policy to application role
+resource "aws_iam_role_policy_attachment" "app_ecr_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.app_s3_role.name
 }

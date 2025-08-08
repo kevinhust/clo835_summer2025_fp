@@ -7,6 +7,8 @@ metadata:
   labels:
     app: webapp
     project: clo835-final-project
+  annotations:
+    eks.amazonaws.com/role-arn: ${IAM_ROLE_ARN}
 
 ---
 # ClusterRole with permissions to create and read namespaces

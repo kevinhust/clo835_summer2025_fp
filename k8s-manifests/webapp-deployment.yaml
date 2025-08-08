@@ -18,11 +18,11 @@ spec:
         app: webapp
     spec:
       serviceAccountName: clo835-sa
+      # securityContext removed to use container's default permissions
       containers:
       - name: webapp
-        # Replace with your actual ECR image URI
-        # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp:latest
-        image: REPLACE_WITH_YOUR_ECR_URI/clo835fp-webapp:latest
+        # ECR image URI - will be updated by CI/CD
+        image: ${ECR_REPOSITORY_URI}:latest
         ports:
         - containerPort: 81
           name: http
@@ -68,17 +68,7 @@ spec:
             configMapKeyRef:
               name: webapp-config
               key: APP_COLOR
-        # Secrets for sensitive data
-        - name: AWS_ACCESS_KEY_ID
-          valueFrom:
-            secretKeyRef:
-              name: aws-secret
-              key: AWS_ACCESS_KEY_ID
-        - name: AWS_SECRET_ACCESS_KEY
-          valueFrom:
-            secretKeyRef:
-              name: aws-secret
-              key: AWS_SECRET_ACCESS_KEY
+        # AWS credentials removed - using IAM role instead
         - name: DBUSER
           valueFrom:
             secretKeyRef:
@@ -110,4 +100,5 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 3
+        # securityContext removed to use container's default user
       # imagePullSecrets not required when nodes have ECR read permissions via IAM role
