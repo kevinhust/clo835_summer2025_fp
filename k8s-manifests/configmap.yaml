@@ -17,13 +17,13 @@ data:
   # s3://clo835fp-bg-images/background-images/professional-bg.jpg
   
   # Group information - replace with your actual group details
-  GROUP_NAME: "CLO835 Final Project Team"
-  GROUP_SLOGAN: "Innovation in Cloud Native Architecture"
+  GROUP_NAME: "KevinWangSolo"
+  GROUP_SLOGAN: "May the 4th be with u"
   
   # Database configuration
   DATABASE: "employees"
   DBPORT: "3306"
-  DBHOST: "mysql-service.clo835.svc.cluster.local"
+  DBHOST: "mysql-service.fp.svc.cluster.local"
   
   # AWS region
   AWS_REGION: "us-east-1"
