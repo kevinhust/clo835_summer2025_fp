@@ -34,7 +34,7 @@ COPY --chown=appuser:appuser . /app
 # Create static directory for S3 downloads
 RUN mkdir -p /app/static && chown -R appuser:appuser /app/static
 
-# Keep root user for now to avoid permission issues
+# Use root user to bind to port 81 (privileged port)
 # USER appuser
 
 # Health check
