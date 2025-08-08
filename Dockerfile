@@ -19,15 +19,14 @@ COPY requirements.txt /tmp/requirements.txt
 
 # Install Python dependencies
 RUN pip install --upgrade pip && \
-    pip install --user -r /tmp/requirements.txt
+    pip install -r /tmp/requirements.txt
 
 # Production stage
 FROM python:3.9-slim as production
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/home/appuser/.local/bin:$PATH"
+    PYTHONUNBUFFERED=1
 
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -40,7 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd --create-home --shell /bin/bash appuser
 
 # Copy Python packages from builder stage
-COPY --from=builder /root/.local /home/appuser/.local
+COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
 
 # Set working directory
 WORKDIR /app
