@@ -20,10 +20,9 @@ spec:
       serviceAccountName: clo835-sa
       containers:
       - name: webapp
-        # Image will be injected by k8s-manifests/deploy.sh
-        # Placeholder token __ECR_URL__ will be replaced with
-        # <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/clo835fp-webapp
-        image: __ECR_URL__:latest
+        # Replace with your actual ECR image URI
+        # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp:latest
+        image: REPLACE_WITH_YOUR_ECR_URI/clo835fp-webapp:latest
         ports:
         - containerPort: 81
           name: http
@@ -111,5 +110,4 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
           timeoutSeconds: 3
-      imagePullSecrets:
-      - name: ecr-secret
+      # imagePullSecrets not required when nodes have ECR read permissions via IAM role
