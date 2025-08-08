@@ -34,8 +34,8 @@ COPY --chown=appuser:appuser . /app
 # Create static directory for S3 downloads
 RUN mkdir -p /app/static && chown -R appuser:appuser /app/static
 
-# Switch to non-root user
-USER appuser
+# Keep root user for now to avoid permission issues
+# USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
