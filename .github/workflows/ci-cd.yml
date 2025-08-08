@@ -110,6 +110,20 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
       
+    - name: Ensure ECR repository exists
+      run: |
+        set -e
+        REPO_NAME=${{ env.ECR_REPOSITORY }}
+        if ! aws ecr describe-repositories --repository-names "$REPO_NAME" >/dev/null 2>&1; then
+          echo "ECR repository $REPO_NAME not found. Creating..."
+          aws ecr create-repository --repository-name "$REPO_NAME" >/dev/null
+          echo "ECR repository $REPO_NAME created."
+        else
+          echo "ECR repository $REPO_NAME exists."
+        fi
+      env:
+        AWS_REGION: ${{ env.AWS_REGION }}
+
     - name: Compute ECR repository URL
       id: ecr
       run: |
