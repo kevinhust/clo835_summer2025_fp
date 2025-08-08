@@ -318,3 +318,4 @@ This project is part of the CLO835 course and is for educational purposes.
 ---
 
 🎓 **CLO835 Summer 2025 Final Project** - Container Technology and Cloud Computing# Infrastructure deployed successfully - ECR: 039444453392.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp
+# EKS Infrastructure recreated Fri Aug  8 15:47:13 EDT 2025
