@@ -1,35 +1,15 @@
-# Multi-stage build for optimized production image
-FROM python:3.9-slim as builder
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install system dependencies in builder stage
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    pkg-config \
-    default-libmysqlclient-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first for better caching
-COPY requirements.txt /tmp/requirements.txt
-
-# Install Python dependencies
-RUN pip install --upgrade pip && \
-    pip install -r /tmp/requirements.txt
-
-# Production stage
-FROM python:3.9-slim as production
+# Use Python 3.9 slim image
+FROM python:3.9-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Install only runtime dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    pkg-config \
+    default-libmysqlclient-dev \
     default-mysql-client \
     iputils-ping \
     && rm -rf /var/lib/apt/lists/* \
@@ -38,11 +18,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash appuser
 
-# Copy Python packages from builder stage
-COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
-
 # Set working directory
 WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt /tmp/requirements.txt
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install -r /tmp/requirements.txt
 
 # Copy application code
 COPY --chown=appuser:appuser . /app
