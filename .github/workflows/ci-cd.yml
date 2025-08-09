@@ -187,14 +187,14 @@ jobs:
         kubectl apply -f k8s-manifests/pvc.yaml
         kubectl apply -f k8s-manifests/configmap.yaml
         
-        # Create AWS secrets dynamically
+        # Create secrets with actual values from GitHub Secrets
         echo "🔐 Creating AWS secrets..."
         kubectl create secret generic aws-secret -n ${{ env.NAMESPACE }} \
           --from-literal=AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
           --from-literal=AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
           --dry-run=client -o yaml | kubectl apply -f -
-        
-        # Create MySQL secrets dynamically
+          
+        # Create MySQL secrets
         echo "🔐 Creating MySQL secrets..."
         kubectl create secret generic mysql-secret -n ${{ env.NAMESPACE }} \
           --from-literal=DBUSER="root" \
