@@ -211,3 +211,11 @@ config.json
 target/
 build/
 dist/
+
+# CLO835 Project specific
+reference/
+CLAUDE.md
+CLO835fp.md
+.claude/
+temp/
+*.backup

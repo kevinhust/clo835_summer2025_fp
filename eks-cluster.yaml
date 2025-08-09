@@ -1,0 +1,52 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: clo835-eks-cluster
+  region: us-east-1
+
+nodeGroups:
+  - name: clo835-eks-nodes
+    instanceType: t3.small
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 3
+    volumeSize: 20
+    ssh:
+      allow: false
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        ebs: true
+        efs: true
+        albIngress: true
+        cloudWatch: true
+
+# Enable logging
+cloudWatch:
+  clusterLogging:
+    enable: ['api', 'audit', 'authenticator', 'controllerManager', 'scheduler']
+
+# Network configuration
+vpc:
+  cidr: "192.168.0.0/16"
+  nat:
+    gateway: Single
+  clusterEndpoints:
+    privateAccess: true
+    publicAccess: true
+
+# Enable IRSA for S3 access
+iam:
+  withOIDC: true
+
+# Add-ons
+addons:
+  - name: vpc-cni
+    version: latest
+  - name: coredns
+    version: latest
+  - name: kube-proxy
+    version: latest
+  - name: aws-ebs-csi-driver
+    version: latest
