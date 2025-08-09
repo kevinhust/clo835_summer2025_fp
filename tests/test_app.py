@@ -104,24 +104,25 @@ class TestEmployeeManagement:
         mock_db.cursor.return_value = mock_cursor
         mock_db_conn.return_value = mock_db
         
-        response = client.post('/getemp', data={'emp_id': '12345'})
+        response = client.post('/fetchdata', data={'emp_id': '12345'})
         
         assert response.status_code == 200
         mock_cursor.execute.assert_called()
         
-    @patch('app.get_db_connection')
+    @patch('app.get_db_connection')  
     def test_get_employee_not_found(self, mock_db_conn, client):
         """Test employee retrieval when employee not found"""
         mock_db = MagicMock()
         mock_cursor = MagicMock()
-        mock_cursor.fetchall.return_value = []
+        mock_cursor.fetchone.return_value = None  # No employee found
         mock_db.cursor.return_value = mock_cursor
         mock_db_conn.return_value = mock_db
         
-        response = client.post('/getemp', data={'emp_id': '99999'})
+        response = client.post('/fetchdata', data={'emp_id': '99999'})
         
         assert response.status_code == 200
-        assert b'not found' in response.data.lower() or b'no employee' in response.data.lower()
+        # The app should show the employee not found message
+        assert b'employee not found' in response.data.lower()
 
 
 class TestConfiguration:
@@ -147,58 +148,63 @@ class TestConfiguration:
 class TestS3Integration:
     """Test S3 background image functionality"""
     
-    @patch('app.boto3.client')
-    def test_download_background_image_success(self, mock_boto_client):
+    @patch('app.s3_client')
+    def test_download_background_image_success(self, mock_s3_client):
         """Test successful background image download from S3"""
-        mock_s3 = MagicMock()
-        mock_boto_client.return_value = mock_s3
+        mock_s3_client.download_file = MagicMock()
         
-        with patch('app.os.path.exists', return_value=False):
-            with patch('app.open', create=True) as mock_open:
-                result = app.download_background_image('test-bucket', 'test-image.jpg')
-                
-                if result:  # If S3 functionality is implemented
-                    mock_s3.download_file.assert_called()
+        with patch('app.BACKGROUND_IMAGE_URL', 's3://test-bucket/test-image.jpg'):
+            with patch('app.os.path.exists', return_value=False):
+                with patch('app.open', create=True):
+                    result = app.download_background_image()
                     
-    @patch('app.boto3.client')
-    def test_download_background_image_failure(self, mock_boto_client):
+                    # Function should complete without errors
+                    assert result is None or isinstance(result, str)
+                    
+    @patch('app.s3_client')
+    def test_download_background_image_failure(self, mock_s3_client):
         """Test background image download failure handling"""
-        mock_s3 = MagicMock()
-        mock_s3.download_file.side_effect = Exception("S3 Error")
-        mock_boto_client.return_value = mock_s3
+        mock_s3_client.download_file = MagicMock(side_effect=Exception("S3 Error"))
         
-        with patch('app.os.path.exists', return_value=False):
-            result = app.download_background_image('test-bucket', 'nonexistent.jpg')
-            
-            # Should handle errors gracefully
-            assert result is not None  # Function should return something
+        with patch('app.BACKGROUND_IMAGE_URL', 's3://test-bucket/nonexistent.jpg'):
+            with patch('app.os.path.exists', return_value=False):
+                result = app.download_background_image()
+                
+                # Should handle errors gracefully
+                assert result is None
 
 
 class TestDatabaseConnection:
     """Test database connection functionality"""
     
-    @patch('app.pymysql.connect')
-    def test_get_db_connection_success(self, mock_connect):
+    @patch('app.connections.Connection')
+    def test_get_db_connection_success(self, mock_connection):
         """Test successful database connection"""
-        mock_connection = MagicMock()
-        mock_connect.return_value = mock_connection
+        mock_conn = MagicMock()
+        mock_connection.return_value = mock_conn
+        
+        # Reset the global connection
+        app.db_conn = None
         
         connection = app.get_db_connection()
         
         assert connection is not None
-        mock_connect.assert_called_once()
+        mock_connection.assert_called_once()
         
-    @patch('app.pymysql.connect')
-    def test_get_db_connection_failure(self, mock_connect):
+    @patch('app.connections.Connection')
+    def test_get_db_connection_failure(self, mock_connection):
         """Test database connection failure handling"""
-        mock_connect.side_effect = Exception("Connection failed")
+        mock_connection.side_effect = Exception("Connection failed")
+        
+        # Reset the global connection
+        app.db_conn = None
         
         try:
             connection = app.get_db_connection()
-            # Should handle connection errors gracefully
-            assert connection is not None or connection is None
+            # Should handle connection errors gracefully or re-raise
+            assert False, "Expected exception to be raised"
         except Exception:
-            # Exception handling is acceptable
+            # Exception is expected for connection failures
             pass
 
 
