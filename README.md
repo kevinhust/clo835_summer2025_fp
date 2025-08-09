@@ -1,5 +1,7 @@
 # CLO835 Final Project
 
+<!-- Trigger CI/CD for fresh Docker build -->
+
 A containerized Flask employee management application with MySQL database, deployed on Amazon EKS with AWS S3 integration. This project demonstrates cloud-native application development, DevOps practices, and complete CI/CD pipeline implementation.
 
 ## 🚀 Quick Start
