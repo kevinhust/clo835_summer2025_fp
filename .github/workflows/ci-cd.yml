@@ -177,25 +177,74 @@ jobs:
         
     - name: Deploy application to EKS
       run: |
-        echo "Deploying application to EKS..."
+        echo "🚀 Starting CLO835 Final Project Deployment to EKS..."
         
-        # Apply all Kubernetes manifests
-        kubectl apply -f k8s-manifests/
+        # Apply all Kubernetes manifests in correct order
+        echo "📦 Applying Kubernetes manifests..."
+        kubectl apply -f k8s-manifests/namespace.yaml
+        kubectl apply -f k8s-manifests/rbac.yaml
+        kubectl apply -f k8s-manifests/pvc.yaml
+        kubectl apply -f k8s-manifests/configmap.yaml
+        
+        # Create secrets with actual values from GitHub Secrets
+        echo "🔐 Creating secrets with actual AWS credentials..."
+        kubectl create secret generic aws-secret -n ${{ env.NAMESPACE }} \
+          --from-literal=AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
+          --from-literal=AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+          --dry-run=client -o yaml | kubectl apply -f -
+          
+        # Apply MySQL secrets
+        kubectl apply -f k8s-manifests/secrets.yaml
+        
+        # Apply MySQL components
+        kubectl apply -f k8s-manifests/mysql-deployment.yaml
+        kubectl apply -f k8s-manifests/mysql-service.yaml
+        
+        # Wait for MySQL to be ready
+        echo "⏳ Waiting for MySQL to be ready..."
+        kubectl wait --for=condition=available deployment/mysql-deployment -n ${{ env.NAMESPACE }} --timeout=180s
+        
+        # Deploy webapp with updated image
+        kubectl apply -f k8s-manifests/webapp-deployment.yaml
+        kubectl apply -f k8s-manifests/webapp-service.yaml
         
         # Update webapp deployment with the new image
         IMAGE_URI="${{ needs.build-and-push.outputs.image-uri }}"
-        echo "Updating webapp image to: $IMAGE_URI"
-        kubectl set image deployment/webapp webapp=${IMAGE_URI} -n ${{ env.NAMESPACE }}
+        echo "🔄 Updating webapp image to: $IMAGE_URI"
+        kubectl set image deployment/webapp-deployment webapp=${IMAGE_URI} -n ${{ env.NAMESPACE }}
         
         # Wait for rollout to complete
-        kubectl rollout status deployment/webapp -n ${{ env.NAMESPACE }} --timeout=300s
+        echo "⏳ Waiting for webapp deployment rollout..."
+        kubectl rollout status deployment/webapp-deployment -n ${{ env.NAMESPACE }} --timeout=300s
+        
+        echo "✅ Deployment completed successfully!"
         
     - name: Verify deployment
       run: |
-        echo "Verifying deployment..."
-        kubectl get pods -n ${{ env.NAMESPACE }}
-        kubectl get services -n ${{ env.NAMESPACE }}
-        kubectl get deployments -n ${{ env.NAMESPACE }}
+        echo "🔍 Verifying CLO835 Final Project deployment..."
+        
+        echo "📊 Pod Status:"
+        kubectl get pods -n ${{ env.NAMESPACE }} -o wide
+        
+        echo "🌐 Services:"
+        kubectl get services -n ${{ env.NAMESPACE }} -o wide
+        
+        echo "🚀 Deployments:"
+        kubectl get deployments -n ${{ env.NAMESPACE }} -o wide
+        
+        echo "💾 Persistent Volumes:"
+        kubectl get pvc -n ${{ env.NAMESPACE }}
+        kubectl get pv
+        
+        echo "🔧 ConfigMaps:"
+        kubectl get configmap -n ${{ env.NAMESPACE }}
+        
+        # Check pod logs for any issues
+        echo "📝 Recent webapp logs:"
+        kubectl logs -l app=webapp -n ${{ env.NAMESPACE }} --tail=10 || echo "No webapp logs yet"
+        
+        echo "📝 Recent mysql logs:"
+        kubectl logs -l app=mysql -n ${{ env.NAMESPACE }} --tail=10 || echo "No mysql logs yet"
         
     - name: Get application URL
       id: get-url
