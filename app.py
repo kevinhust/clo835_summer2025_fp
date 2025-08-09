@@ -54,15 +54,21 @@ if BACKGROUND_IMAGE_URL:
 else:
     logger.warning("Background image URL not provided")
 
-# Create a connection to the MySQL database
-db_conn = connections.Connection(
-    host= DBHOST,
-    port=DBPORT,
-    user= DBUSER,
-    password= DBPWD, 
-    db= DATABASE
-    
-)
+# Database connection will be created on demand
+db_conn = None
+
+def get_db_connection():
+    """Get or create database connection"""
+    global db_conn
+    if db_conn is None:
+        db_conn = connections.Connection(
+            host=DBHOST,
+            port=DBPORT,
+            user=DBUSER,
+            password=DBPWD, 
+            db=DATABASE
+        )
+    return db_conn
 output = {}
 table = 'employee';
 
@@ -155,12 +161,13 @@ def AddEmp():
 
   
     insert_sql = "INSERT INTO employee VALUES (%s, %s, %s, %s, %s)"
-    cursor = db_conn.cursor()
+    db = get_db_connection()
+    cursor = db.cursor()
 
     try:
         
         cursor.execute(insert_sql,(emp_id, first_name, last_name, primary_skill, location))
-        db_conn.commit()
+        db.commit()
         emp_name = "" + first_name + " " + last_name
 
     finally:
