@@ -37,7 +37,7 @@ nodeGroups:
 # Enable logging
 cloudWatch:
   clusterLogging:
-    enable: ['api', 'audit', 'authenticator', 'controllerManager', 'scheduler']
+    enableTypes: ['api', 'audit', 'authenticator', 'controllerManager', 'scheduler']
 
 # Network configuration
 vpc:
