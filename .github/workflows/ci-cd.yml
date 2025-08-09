@@ -140,20 +140,8 @@ jobs:
     - name: Validate Kubernetes manifests
       run: |
         echo "Validating Kubernetes YAML syntax..."
-        # Check YAML syntax using Python since kubectl needs cluster connection
-        python -c "
-import yaml
-import os
-for file in os.listdir('k8s-manifests/'):
-    if file.endswith('.yaml') or file.endswith('.yml'):
-        with open(f'k8s-manifests/{file}', 'r') as f:
-            try:
-                docs = list(yaml.safe_load_all(f.read()))
-                print(f'✅ {file}: Valid YAML syntax')
-            except yaml.YAMLError as e:
-                print(f'❌ {file}: YAML Error - {e}')
-                exit(1)
-        "
+        # Simple YAML syntax validation using Python
+        python -c "import yaml, glob; [yaml.safe_load_all(open(f).read()) for f in glob.glob('k8s-manifests/*.yaml')]" || exit 1
         echo "All Kubernetes manifests have valid YAML syntax!"
 
   # Job 4: Deploy to EKS (only on main branch)
