@@ -81,31 +81,51 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
       
-    - name: Build, tag, and push image to Amazon ECR
-      id: build
+    - name: Ensure ECR repository exists
       run: |
-        # Get AWS Account ID and construct ECR URI
+        set -e
+        REPO_NAME=${{ env.ECR_REPOSITORY }}
+        if ! aws ecr describe-repositories --repository-names "$REPO_NAME" >/dev/null 2>&1; then
+          echo "ECR repository $REPO_NAME not found. Creating..."
+          aws ecr create-repository --repository-name "$REPO_NAME" >/dev/null
+          echo "ECR repository $REPO_NAME created."
+        else
+          echo "ECR repository $REPO_NAME exists."
+        fi
+      env:
+        AWS_REGION: ${{ env.AWS_REGION }}
+
+    - name: Compute ECR repository URL
+      id: ecr
+      run: |
         AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-        ECR_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}
-        IMAGE_TAG=${{ github.sha }}
-        IMAGE_URI=${ECR_URI}:${IMAGE_TAG}
-        
-        echo "Building and pushing image: $IMAGE_URI"
-        
-        # Ensure ECR repository exists
-        aws ecr describe-repositories --repository-names ${{ env.ECR_REPOSITORY }} || \
-        aws ecr create-repository --repository-name ${{ env.ECR_REPOSITORY }}
-        
-        # Build image
-        docker build -t $IMAGE_URI .
-        docker tag $IMAGE_URI $ECR_URI:latest
-        
-        # Push image to ECR
-        docker push $IMAGE_URI
-        docker push $ECR_URI:latest
-        
-        echo "Successfully pushed: $IMAGE_URI"
-        echo "image-uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+        echo "url=${AWS_ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}" >> $GITHUB_OUTPUT
+
+    - name: Extract metadata for Docker
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ steps.ecr.outputs.url }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          # Avoid empty branch name in PR which produced invalid tag like ":-<sha>"
+          type=sha,prefix=sha-
+          type=raw,value=latest,enable={{is_default_branch}}
+          
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build and push Docker image
+      id: build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
         
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
@@ -170,24 +190,23 @@ jobs:
       run: |
         aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
         
-    - name: Verify cluster access
+    - name: Update deployment manifests and deploy
       run: |
-        kubectl get nodes
-        kubectl get namespaces
+        AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        ECR_URL=${AWS_ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}
+        IAM_ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/LabRole"
         
-    - name: Deploy application to EKS
-      run: |
-        echo "Deploying application to EKS..."
+        # Update webapp deployment with correct image URI
+        sed -i "s|\${ECR_REPOSITORY_URI}|${ECR_URL}|g" k8s-manifests/webapp-deployment.yaml
         
-        # Apply all Kubernetes manifests
+        # Update service account with IAM role ARN
+        sed -i "s|\${IAM_ROLE_ARN}|${IAM_ROLE_ARN}|g" k8s-manifests/rbac.yaml
+        
+        # Apply manifests
         kubectl apply -f k8s-manifests/
         
-        # Update webapp deployment with the new image
-        IMAGE_URI="${{ needs.build-and-push.outputs.image-uri }}"
-        echo "Updating webapp image to: $IMAGE_URI"
-        kubectl set image deployment/webapp webapp=${IMAGE_URI} -n ${{ env.NAMESPACE }}
-        
-        # Wait for rollout to complete
+        # Update webapp deployment to use current image tag
+        kubectl set image deployment/webapp webapp=${ECR_URL}:sha-${{ github.sha }} -n ${{ env.NAMESPACE }}
         kubectl rollout status deployment/webapp -n ${{ env.NAMESPACE }} --timeout=300s
         
     - name: Verify deployment

@@ -243,3 +243,5 @@ For more detailed troubleshooting, check:
 ---
 
 **Note**: This project is designed for educational purposes as part of CLO835 coursework. All resources should be cleaned up after evaluation to avoid AWS charges.
+
+🎓 **CLO835 Summer 2025 Final Project** - Container Technology and Cloud Computing

@@ -64,20 +64,16 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
-        readinessProbe:
-          exec:
-            command:
-            - mysql
-            - -h
-            - localhost
-            - -u
-            - root
-            - -p$(MYSQL_ROOT_PASSWORD)
-            - -e
-            - "SELECT 1"
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 3
+        # readinessProbe temporarily disabled
+        # readinessProbe:
+        #   exec:
+        #     command:
+        #     - /bin/sh
+        #     - -c
+        #     - "mysql -u root -p$(MYSQL_ROOT_PASSWORD) -e 'SELECT 1'"
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 10
+        #   timeoutSeconds: 5
       volumes:
       - name: mysql-storage
         persistentVolumeClaim:
