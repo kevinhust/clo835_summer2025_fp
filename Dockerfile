@@ -1,5 +1,5 @@
-# Multi-stage build for optimized production image
-FROM python:3.9-slim as builder
+# Use single-stage build for reliability
+FROM python:3.9-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -7,30 +7,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies in builder stage
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     pkg-config \
     default-libmysqlclient-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first for better caching
-COPY requirements.txt /tmp/requirements.txt
-
-# Install Python dependencies
-RUN pip install --upgrade pip && \
-    pip install --user -r /tmp/requirements.txt
-
-# Production stage
-FROM python:3.9-slim as production
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/home/appuser/.local/bin:$PATH"
-
-# Install only runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
     default-mysql-client \
     iputils-ping \
     && rm -rf /var/lib/apt/lists/* \
@@ -39,8 +20,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash appuser
 
-# Copy Python packages from builder stage
-COPY --from=builder /root/.local /home/appuser/.local
+# Copy requirements first for better caching
+COPY requirements.txt /tmp/requirements.txt
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install -r /tmp/requirements.txt
 
 # Set working directory
 WORKDIR /app
