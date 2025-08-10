@@ -109,19 +109,20 @@ class TestEmployeeManagement:
         assert response.status_code == 200
         mock_cursor.execute.assert_called()
         
-    @patch('app.get_db_connection')
+    @patch('app.get_db_connection')  
     def test_get_employee_not_found(self, mock_db_conn, client):
         """Test employee retrieval when employee not found"""
         mock_db = MagicMock()
         mock_cursor = MagicMock()
-        mock_cursor.fetchone.return_value = None
+        mock_cursor.fetchone.return_value = None  # No employee found
         mock_db.cursor.return_value = mock_cursor
         mock_db_conn.return_value = mock_db
         
         response = client.post('/fetchdata', data={'emp_id': '99999'})
         
         assert response.status_code == 200
-        assert b'employee not found' in response.data.lower() or b'not found' in response.data.lower()
+        # The app should show the employee not found message
+        assert b'employee not found' in response.data.lower()
 
 
 class TestConfiguration:
@@ -197,10 +198,10 @@ class TestDatabaseConnection:
         app.db_conn = None
         try:
             connection = app.get_db_connection()
-            # Should handle connection errors gracefully
-            assert connection is not None or connection is None
+            # Should handle connection errors gracefully or re-raise
+            assert False, "Expected exception to be raised"
         except Exception:
-            # Exception handling is acceptable
+            # Exception is expected for connection failures
             pass
 
 

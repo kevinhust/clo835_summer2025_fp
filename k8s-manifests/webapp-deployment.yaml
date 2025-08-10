@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webapp
+  name: webapp-deployment
   namespace: fp
   labels:
     app: webapp
@@ -22,9 +22,9 @@ spec:
       - name: ecr-secret
       containers:
       - name: webapp
-        # Replace with your actual ECR image URI
-        # Example: 123456789012.dkr.ecr.us-east-1.amazonaws.com/clo835fp-webapp:latest
-        image: REPLACE_WITH_YOUR_ECR_URI/clo835fp-webapp:latest
+        # This will be updated by GitHub Actions with actual ECR URI
+        # Placeholder for initial deployment - will be overridden by CI/CD
+        image: public.ecr.aws/lambda/python:3.9
         ports:
         - containerPort: 81
           name: http

@@ -21,11 +21,23 @@ nodeGroups:
         efs: true
         albIngress: true
         cloudWatch: true
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+        - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+    labels:
+      project: "clo835-final-project"
+      nodegroup-type: "worker-nodes"
+    tags:
+      Project: "CLO835-Final-Project"
+      Environment: "demo"
+      ManagedBy: "eksctl"
 
 # Enable logging
 cloudWatch:
   clusterLogging:
-    enable: ['api', 'audit', 'authenticator', 'controllerManager', 'scheduler']
+    enableTypes: ['api', 'audit', 'authenticator', 'controllerManager', 'scheduler']
 
 # Network configuration
 vpc:
