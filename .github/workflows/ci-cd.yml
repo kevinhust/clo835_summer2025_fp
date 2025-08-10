@@ -122,7 +122,55 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
         
-  # Job 3: Validate Kubernetes Manifests  
+  # Job 3: Create EKS Infrastructure
+  create-infrastructure:
+    name: Create EKS Infrastructure
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Setup eksctl
+      run: |
+        curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+        sudo mv /tmp/eksctl /usr/local/bin
+        eksctl version
+        
+    - name: Check if EKS cluster exists
+      id: check-cluster
+      run: |
+        if aws eks describe-cluster --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }} 2>/dev/null; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "EKS cluster ${{ env.EKS_CLUSTER_NAME }} already exists"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "EKS cluster ${{ env.EKS_CLUSTER_NAME }} does not exist"
+        fi
+        
+    - name: Create EKS cluster
+      if: steps.check-cluster.outputs.exists == 'false'
+      run: |
+        echo "Creating EKS cluster ${{ env.EKS_CLUSTER_NAME }}..."
+        eksctl create cluster -f eks-cluster.yaml
+        echo "EKS cluster created successfully!"
+        
+    - name: Wait for cluster to be ready
+      run: |
+        echo "Waiting for cluster to be ready..."
+        aws eks wait cluster-active --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+        echo "EKS cluster is ready!"
+
+  # Job 4: Validate Kubernetes Manifests  
   validate-k8s:
     name: Validate Kubernetes Manifests
     runs-on: ubuntu-latest
@@ -143,11 +191,11 @@ jobs:
         kubectl --dry-run=client apply -f k8s-manifests/
         echo "All manifests are valid!"
 
-  # Job 4: Deploy to EKS (only on main branch)
+  # Job 5: Deploy to EKS (only on main branch)
   deploy:
     name: Deploy to EKS
     runs-on: ubuntu-latest
-    needs: [test, build-and-push, validate-k8s]
+    needs: [test, build-and-push, create-infrastructure, validate-k8s]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
