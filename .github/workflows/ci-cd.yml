@@ -257,11 +257,25 @@ jobs:
         echo "⏳ Waiting for MySQL to be ready..."
         echo "📊 Checking MySQL pod status..."
         kubectl get pods -n ${{ env.NAMESPACE }} -l app=mysql
+        
+        # Clean up any failed pods first
+        echo "🧹 Cleaning up any failed MySQL pods..."
+        kubectl delete pods -n ${{ env.NAMESPACE }} -l app=mysql --field-selector=status.phase=Failed || true
+        
+        # Wait for deployment to be available
+        echo "⏳ Waiting for MySQL deployment to be available..."
         kubectl wait --for=condition=available deployment/mysql-deployment -n ${{ env.NAMESPACE }} --timeout=300s
         
         # Additional check - wait for pod to be ready
         echo "⏳ Waiting for MySQL pod to be ready..."
         kubectl wait --for=condition=ready pod -l app=mysql -n ${{ env.NAMESPACE }} --timeout=300s
+        
+        # Show detailed MySQL pod status and logs for debugging
+        echo "📋 MySQL pod detailed status:"
+        kubectl get pods -n ${{ env.NAMESPACE }} -l app=mysql -o wide
+        kubectl describe pods -n ${{ env.NAMESPACE }} -l app=mysql
+        echo "📝 MySQL pod logs:"
+        kubectl logs -n ${{ env.NAMESPACE }} -l app=mysql --tail=20 || echo "No logs available yet"
         
         # Deploy webapp with updated image
         kubectl apply -f k8s-manifests/webapp-deployment.yaml

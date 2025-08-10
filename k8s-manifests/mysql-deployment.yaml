@@ -30,9 +30,10 @@ spec:
           value: "employees"
         - name: MYSQL_ALLOW_EMPTY_PASSWORD
           value: "no"
-        volumeMounts:
-        - name: mysql-storage
-          mountPath: /var/lib/mysql
+        # Temporary: Use emptyDir for now to avoid PVC issues
+        # volumeMounts:
+        # - name: mysql-storage
+        #   mountPath: /var/lib/mysql
         resources:
           requests:
             memory: "256Mi"
@@ -63,7 +64,8 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
-      volumes:
-      - name: mysql-storage
-        persistentVolumeClaim:
-          claimName: mysql-pvc
+      # Temporary: Use emptyDir for now to avoid PVC issues
+      # volumes:
+      # - name: mysql-storage
+      #   persistentVolumeClaim:
+      #     claimName: mysql-pvc
