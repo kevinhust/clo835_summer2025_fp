@@ -9,7 +9,7 @@ metadata:
     project: clo835-final-project
 data:
   # S3 background image URL - current active image (S3 bucket format)
-  BACKGROUND_IMAGE_URL: "s3://clo835fp-bg-images/background/green-theme.jpg"
+  BACKGROUND_IMAGE_URL: "s3://clo835fp-bg-images/background/professional-bg"
   
   # Available background images for demo (change BACKGROUND_IMAGE_URL to these during demo):
   # s3://clo835fp-bg-images/background/default-bg.jpg     (current)
