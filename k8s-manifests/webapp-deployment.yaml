@@ -17,7 +17,7 @@ spec:
       labels:
         app: webapp
     spec:
-      serviceAccountName: clo835_sa
+      serviceAccountName: clo835-sa
       imagePullSecrets:
       - name: ecr-secret
       containers:
