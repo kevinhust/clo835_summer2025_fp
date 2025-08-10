@@ -257,7 +257,13 @@ jobs:
         
         # Wait for MySQL to be ready
         echo "⏳ Waiting for MySQL to be ready..."
-        kubectl wait --for=condition=available deployment/mysql-deployment -n ${{ env.NAMESPACE }} --timeout=180s
+        echo "📊 Checking MySQL pod status..."
+        kubectl get pods -n ${{ env.NAMESPACE }} -l app=mysql
+        kubectl wait --for=condition=available deployment/mysql-deployment -n ${{ env.NAMESPACE }} --timeout=300s
+        
+        # Additional check - wait for pod to be ready
+        echo "⏳ Waiting for MySQL pod to be ready..."
+        kubectl wait --for=condition=ready pod -l app=mysql -n ${{ env.NAMESPACE }} --timeout=300s
         
         # Deploy webapp with updated image
         kubectl apply -f k8s-manifests/webapp-deployment.yaml
