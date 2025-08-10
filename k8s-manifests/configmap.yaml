@@ -9,13 +9,13 @@ metadata:
     project: clo835-final-project
 data:
   # S3 background image URL - current active image (HTTPS URL format for web access)
-  BACKGROUND_IMAGE_URL: "https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background-images/default-bg.jpg"
+  BACKGROUND_IMAGE_URL: "https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background/default-bg.jpg"
   
   # Available background images for demo (change BACKGROUND_IMAGE_URL to these during demo):
-  # https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background-images/default-bg.jpg     (current)
-  # https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background-images/blue-theme.jpg     (blue theme)
-  # https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background-images/green-theme.jpg    (green theme)  
-  # https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background-images/professional-bg.jpg (professional)
+  # https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background/default-bg.jpg     (current)
+  # https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background/blue-theme.jpg     (blue theme)
+  # https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background/green-theme.jpg    (green theme)  
+  # https://s3.us-east-1.amazonaws.com/clo835fp-bg-images/background/professional-bg.jpg (professional)
   
   # Group information - replace with your actual group details
   GROUP_NAME: "KevinWangSolo"
