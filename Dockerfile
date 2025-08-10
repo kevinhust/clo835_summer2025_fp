@@ -41,10 +41,10 @@ USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python3 -c "import requests; requests.get('http://localhost:81/about', timeout=5)" || exit 1
+    CMD python3 -c "import requests; requests.get('http://localhost:8080/about', timeout=5)" || exit 1
 
 # Expose port
-EXPOSE 81
+EXPOSE 8080
 
 # Run application
 ENTRYPOINT ["python3"]
