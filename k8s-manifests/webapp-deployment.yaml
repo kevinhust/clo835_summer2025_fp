@@ -17,7 +17,7 @@ spec:
       labels:
         app: webapp
     spec:
-      serviceAccountName: clo835-sa
+      serviceAccountName: clo835_sa
       containers:
       - name: webapp
         # Replace with your actual ECR image URI
