@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: mysql
-        image: mysql:8.0
+        image: mysql:5.7
         ports:
         - containerPort: 3306
           name: mysql
@@ -48,22 +48,28 @@ spec:
             - ping
             - -h
             - localhost
-          initialDelaySeconds: 60
-          periodSeconds: 20
-          timeoutSeconds: 10
-          failureThreshold: 5
+            - -u
+            - root
+            - --password=clo835_password123
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          timeoutSeconds: 15
+          failureThreshold: 6
         readinessProbe:
           exec:
             command:
             - mysql
             - -h
             - localhost
+            - -u
+            - root
+            - --password=clo835_password123
             - -e
             - "SELECT 1"
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+          initialDelaySeconds: 45
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 5
       # Temporary: Use emptyDir for now to avoid PVC issues
       # volumes:
       # - name: mysql-storage
