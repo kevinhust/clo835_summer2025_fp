@@ -249,7 +249,16 @@ jobs:
           --from-literal=DBPWD="clo835_password123" \
           --dry-run=client -o yaml | kubectl apply -f -
         
-        # Apply MySQL components
+        # Clean up existing MySQL deployment first
+        echo "🧹 Cleaning up existing MySQL deployment..."
+        kubectl delete deployment mysql-deployment -n ${{ env.NAMESPACE }} --ignore-not-found=true
+        kubectl delete pods -n ${{ env.NAMESPACE }} -l app=mysql --force --grace-period=0 || true
+        
+        # Wait a moment for cleanup
+        sleep 10
+        
+        # Apply MySQL components fresh
+        echo "🗃️ Deploying fresh MySQL instance..."
         kubectl apply -f k8s-manifests/mysql-deployment.yaml
         kubectl apply -f k8s-manifests/mysql-service.yaml
         
