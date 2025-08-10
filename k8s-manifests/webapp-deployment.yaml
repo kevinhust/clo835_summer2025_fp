@@ -18,6 +18,8 @@ spec:
         app: webapp
     spec:
       serviceAccountName: clo835_sa
+      imagePullSecrets:
+      - name: ecr-secret
       containers:
       - name: webapp
         # Replace with your actual ECR image URI

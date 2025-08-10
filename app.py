@@ -196,7 +196,8 @@ def FetchData():
 
     output = {}
     select_sql = "SELECT emp_id, first_name, last_name, primary_skill, location from employee where emp_id=%s"
-    cursor = db_conn.cursor()
+    db = get_db_connection()
+    cursor = db.cursor()
 
     try:
         cursor.execute(select_sql,(emp_id,))
